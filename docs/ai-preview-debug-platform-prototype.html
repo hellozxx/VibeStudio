@@ -3,698 +3,656 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Vibe Preview Studio · Prototype v2</title>
+  <title>Vibe Preview Studio · Prototype v3</title>
   <style>
     :root {
-      --bg: #0b0d12;
-      --surface: #12151d;
-      --surface-2: #171b25;
-      --surface-3: #1b2130;
-      --border: #2a3245;
-      --text: #f5f7ff;
-      --muted: #a3aec7;
-      --blue: #4f8cff;
-      --blue-soft: rgba(79, 140, 255, 0.16);
-      --green: #35d49a;
-      --yellow: #ffbf47;
+      --bg: #0a0c10;
+      --surface: #11141a;
+      --surface-2: #171b24;
+      --surface-3: #1c2230;
+      --line: #2b3447;
+      --text: #f3f6ff;
+      --sub: #9aa6c5;
+      --blue: #5d8dff;
+      --violet: #7d5dff;
+      --green: #37d49a;
+      --orange: #ffbf47;
       --red: #ff5d73;
-      --radius: 12px;
+      --radius: 14px;
     }
 
     * { box-sizing: border-box; }
 
     body {
       margin: 0;
-      background:
-        radial-gradient(1000px 380px at 20% -10%, rgba(79, 140, 255, 0.16), transparent),
-        radial-gradient(900px 340px at 100% -10%, rgba(53, 212, 154, 0.09), transparent),
-        var(--bg);
-      color: var(--text);
       font: 14px/1.45 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Noto Sans CJK SC", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1000px 420px at 20% -14%, rgba(93,141,255,.20), transparent),
+        radial-gradient(1000px 420px at 100% -15%, rgba(125,93,255,.15), transparent),
+        var(--bg);
       min-height: 100vh;
       padding: 14px;
     }
 
-    .shell {
+    .frame {
       height: calc(100vh - 28px);
       display: grid;
-      grid-template-columns: 250px 1fr 360px;
-      grid-template-rows: 56px 1fr 250px;
+      grid-template-columns: 88px 1fr;
       gap: 10px;
     }
 
-    .panel {
-      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0));
-      border: 1px solid var(--border);
+    .dock {
+      border: 1px solid var(--line);
       border-radius: var(--radius);
-      overflow: hidden;
-      backdrop-filter: blur(7px);
-    }
-
-    .topbar {
-      grid-column: 1 / 4;
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0));
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: space-between;
-      padding: 0 12px;
-      background: rgba(18, 21, 29, 0.86);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
+      gap: 8px;
+      padding: 10px 8px;
     }
 
-    .brand { font-weight: 700; letter-spacing: 0.2px; }
-    .brand small { color: var(--muted); font-weight: 500; margin-left: 8px; }
+    .logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--blue), var(--violet));
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+    }
 
-    .top-right { display: flex; align-items: center; gap: 8px; }
+    .dock-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--sub);
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .dock-btn.active {
+      color: var(--text);
+      background: rgba(93,141,255,.16);
+      border-color: rgba(93,141,255,.45);
+    }
+
+    .app {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0));
+      display: grid;
+      grid-template-rows: 60px 1fr;
+      overflow: hidden;
+    }
+
+    .header {
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 14px;
+      background: rgba(17, 20, 26, .85);
+    }
+
+    .title strong { font-size: 15px; }
+    .title small { color: var(--sub); margin-left: 8px; }
+
+    .header-actions { display: flex; gap: 8px; align-items: center; }
 
     .chip {
-      border: 1px solid var(--border);
+      border: 1px solid var(--line);
       border-radius: 999px;
       padding: 5px 9px;
+      color: var(--sub);
       font-size: 12px;
-      color: var(--muted);
-      background: rgba(255,255,255,0.02);
-    }
-
-    .chip.live { color: #c6ffe9; border-color: rgba(53,212,154,0.5); background: rgba(53,212,154,0.14); }
-
-    .btn {
-      border: 1px solid var(--border);
-      background: var(--surface-2);
-      color: var(--text);
-      border-radius: 10px;
-      padding: 8px 10px;
-      cursor: pointer;
-      transition: .18s ease;
-    }
-    .btn:hover { border-color: #44619b; }
-
-    .btn.primary {
-      background: linear-gradient(90deg, #467cff, #6f5cff);
-      border: none;
-      font-weight: 600;
-    }
-
-    .sidebar { padding: 10px; display: grid; grid-template-rows: auto auto 1fr; gap: 10px; }
-
-    .section {
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      background: rgba(255,255,255,0.02);
-      overflow: hidden;
-    }
-
-    .section h4 {
-      margin: 0;
-      padding: 10px;
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: .4px;
-      text-transform: uppercase;
-      color: var(--muted);
-      border-bottom: 1px solid var(--border);
       background: rgba(255,255,255,.02);
     }
 
-    .section .body { padding: 10px; }
+    .chip.live { border-color: rgba(55,212,154,.5); color: #b5ffdf; background: rgba(55,212,154,.14); }
 
-    .menu button {
-      width: 100%;
-      text-align: left;
-      border: 1px solid transparent;
-      background: transparent;
+    .btn {
+      border: 1px solid var(--line);
       color: var(--text);
-      padding: 9px 10px;
-      border-radius: 8px;
+      background: var(--surface-2);
+      border-radius: 10px;
+      padding: 8px 10px;
       cursor: pointer;
-      margin-bottom: 6px;
     }
 
-    .menu button.active {
-      background: var(--blue-soft);
-      border-color: rgba(79,140,255,0.45);
+    .btn.primary {
+      border: none;
+      background: linear-gradient(90deg, var(--blue), var(--violet));
+      font-weight: 600;
     }
-
-    .tree { list-style: none; margin: 0; padding: 0; }
-    .tree li { padding: 6px 0; color: var(--muted); }
-    .tree li strong { color: var(--text); }
 
     .workspace {
       display: grid;
-      grid-template-rows: 40px 1fr;
-      background: var(--surface);
+      grid-template-columns: 280px 1fr 370px;
+      gap: 10px;
+      padding: 10px;
+      overflow: hidden;
     }
 
-    .tabs {
-      display: flex;
-      gap: 2px;
-      border-bottom: 1px solid var(--border);
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface);
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: 40px 1fr;
+    }
+
+    .panel-h {
+      border-bottom: 1px solid var(--line);
       background: var(--surface-2);
-      padding: 5px 6px;
+      color: var(--sub);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 10px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .25px;
+    }
+
+    .panel-b { padding: 10px; overflow: auto; }
+
+    .left .item {
+      border: 1px solid #33405a;
+      background: #141a26;
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 8px;
+    }
+
+    .left .menu button {
+      width: 100%;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text);
+      text-align: left;
+      padding: 9px;
+      border-radius: 8px;
+      margin-bottom: 4px;
+      cursor: pointer;
+    }
+
+    .left .menu button.active {
+      background: rgba(93,141,255,.15);
+      border-color: rgba(93,141,255,.42);
+    }
+
+    .center {
+      display: grid;
+      grid-template-rows: 38px 1fr 218px;
+      gap: 10px;
+      overflow: hidden;
+    }
+
+    .tabbar {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--surface);
+      padding: 4px;
     }
 
     .tab {
       border: 1px solid transparent;
-      padding: 6px 10px;
       border-radius: 8px;
-      color: var(--muted);
+      padding: 6px 10px;
+      color: var(--sub);
       cursor: pointer;
-      font-size: 13px;
     }
 
-    .tab.active {
-      color: var(--text);
-      background: rgba(79,140,255,.13);
-      border-color: rgba(79,140,255,.4);
-    }
+    .tab.active { color: var(--text); background: rgba(93,141,255,.15); border-color: rgba(93,141,255,.4); }
 
-    .tab-content { display: none; height: 100%; }
-    .tab-content.active { display: block; }
-
-    .preview {
-      height: 100%;
+    .viewport {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
       display: grid;
-      grid-template-rows: 36px 1fr;
+      grid-template-rows: 34px 1fr;
+      background: #0e121a;
     }
 
-    .urlbar {
+    .url {
+      border-bottom: 1px solid var(--line);
       display: flex;
       align-items: center;
       gap: 8px;
-      border-bottom: 1px solid var(--border);
       padding: 0 10px;
-      color: var(--muted);
+      color: var(--sub);
       font-size: 12px;
       background: var(--surface-2);
     }
 
-    .dot { width: 8px; height: 8px; border-radius: 50%; background: #ff6b6b; }
-    .dot:nth-child(2) { background: #f7c948; }
-    .dot:nth-child(3) { background: #37d07c; }
-
-    .app-frame {
-      padding: 22px;
+    .view-area {
       overflow: auto;
-      background: linear-gradient(180deg, #0f1420, #0d1119);
+      padding: 18px;
+      display: grid;
+      place-items: center;
     }
 
-    .card {
-      max-width: 740px;
-      margin: 0 auto;
-      border: 1px solid #32405d;
-      border-radius: 14px;
+    .phone {
+      width: min(420px, 100%);
+      border: 1px solid #37435e;
+      border-radius: 18px;
       background: #141b2a;
       overflow: hidden;
-      box-shadow: 0 10px 40px rgba(0,0,0,.35);
+      box-shadow: 0 16px 40px rgba(0,0,0,.35);
     }
 
-    .card .head {
-      padding: 14px 16px;
-      border-bottom: 1px solid #2f3a56;
+    .phone-h {
+      padding: 12px;
+      border-bottom: 1px solid #2c3751;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
-    .metric {
-      border: 1px solid #2f3a56;
-      background: #0f1420;
-      border-radius: 8px;
-      padding: 6px 8px;
-      font-size: 12px;
-      color: var(--muted);
-    }
+    .metric { font-size: 12px; color: var(--sub); border: 1px solid #2e3a56; padding: 4px 8px; border-radius: 999px; }
 
-    .card .body { padding: 16px; display: grid; gap: 12px; }
+    .phone-b { padding: 14px; display: grid; gap: 10px; }
 
     input, select {
       width: 100%;
-      border: 1px solid #334267;
-      background: #0f1525;
-      color: #e8eeff;
+      border: 1px solid #344266;
       border-radius: 10px;
-      padding: 10px 11px;
+      padding: 10px;
+      color: var(--text);
+      background: #0f1524;
     }
 
-    .pay { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-
-    .state {
+    .status {
+      border: 1px solid #344266;
       border-radius: 10px;
       padding: 9px 10px;
-      border: 1px solid #3a4868;
-      background: #101828;
-      color: #c8d4f0;
+      color: #ced8f3;
+      background: #0f1524;
     }
 
-    .assistant { display: grid; grid-template-rows: 1fr 210px; gap: 10px; }
-
-    .assistant-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 12px;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface-2);
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .assistant-body { padding: 10px; display: grid; gap: 10px; }
-
-    .hint, .item {
-      border: 1px solid #31406b;
-      border-radius: 10px;
-      background: #111a32;
-      padding: 10px;
-    }
-
-    .item.error { border-left: 3px solid var(--red); }
-    .item.warn { border-left: 3px solid var(--yellow); }
-    .item.ok { border-left: 3px solid var(--green); }
-
-    .actions { display: flex; flex-wrap: wrap; gap: 8px; }
-
-    .bottom {
-      grid-column: 1 / 4;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    .log-box, .network-box {
-      height: 100%;
-      display: grid;
-      grid-template-rows: 38px 1fr;
+    .kpi-row {
+      border: 1px solid var(--line);
+      border-radius: 12px;
       background: var(--surface);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      padding: 8px;
     }
 
-    .row-head {
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 10px;
-      color: var(--muted);
+    .kpi {
+      border: 1px solid #31405f;
+      border-radius: 10px;
+      padding: 8px;
+      background: #141b2a;
+      color: var(--sub);
       font-size: 12px;
-      background: var(--surface-2);
     }
+    .kpi strong { display: block; color: var(--text); font-size: 18px; margin-top: 4px; }
+
+    .right {
+      display: grid;
+      grid-template-rows: 1fr 230px;
+      gap: 10px;
+      overflow: hidden;
+    }
+
+    .card {
+      border: 1px solid #32405f;
+      border-radius: 10px;
+      padding: 10px;
+      background: #111a31;
+      margin-bottom: 8px;
+    }
+
+    .card.error { border-left: 3px solid var(--red); }
+    .card.warn { border-left: 3px solid var(--orange); }
+    .card.ok { border-left: 3px solid var(--green); }
+
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
 
     .table {
-      overflow: auto;
-      padding: 8px;
-      font-size: 12px;
-    }
-
-    table {
       width: 100%;
       border-collapse: collapse;
+      font-size: 12px;
     }
 
     th, td {
       text-align: left;
-      border-bottom: 1px solid #2a3245;
-      padding: 8px 7px;
+      border-bottom: 1px solid #29334a;
+      padding: 8px 6px;
     }
 
-    th { color: var(--muted); font-weight: 600; }
-    .text-ok { color: #7ff7cb; }
-    .text-err { color: #ff8a9b; }
-    .text-warn { color: #ffd98b; }
+    th { color: var(--sub); font-weight: 600; }
+    .ok { color: #8ff4ce; }
+    .warn { color: #ffd48a; }
+    .bad { color: #ff9cab; }
 
-    @media (max-width: 1320px) {
-      .shell { grid-template-columns: 220px 1fr 320px; }
+    .small { color: var(--sub); font-size: 12px; }
+
+    @media (max-width: 1280px) {
+      .workspace { grid-template-columns: 240px 1fr 330px; }
     }
 
-    @media (max-width: 1100px) {
-      .shell {
-        grid-template-columns: 1fr;
-        grid-template-rows: 56px auto auto 280px;
-        height: auto;
-      }
-      .topbar, .bottom { grid-column: auto; }
-      .bottom { grid-template-columns: 1fr; }
+    @media (max-width: 1080px) {
+      .frame { grid-template-columns: 1fr; height: auto; }
+      .dock { display: none; }
+      .workspace { grid-template-columns: 1fr; }
+      .center { grid-template-rows: 38px 1fr auto; }
+      .kpi-row { grid-template-columns: repeat(2,1fr); }
     }
   </style>
 </head>
 <body>
-  <div class="shell">
-    <header class="topbar">
-      <div class="brand">Vibe Preview Studio <small>Runtime-first AI App Builder</small></div>
-      <div class="top-right">
-        <span class="chip">workspace: smart-checkout</span>
-        <span class="chip live" id="runtimeStatus">● Preview Live</span>
-        <button class="btn" id="switchDevice">切换设备</button>
-        <button class="btn" id="injectIssue">注入故障</button>
-        <button class="btn primary" id="runAgent">AI 自动调试</button>
-      </div>
-    </header>
-
-    <aside class="panel sidebar">
-      <section class="section">
-        <h4>导航</h4>
-        <div class="body menu">
-          <button class="active">Preview</button>
-          <button>Session Replay</button>
-          <button>Observability</button>
-          <button>Patch Center</button>
-        </div>
-      </section>
-
-      <section class="section">
-        <h4>项目上下文</h4>
-        <div class="body">
-          <ul class="tree">
-            <li><strong>Branch:</strong> preview/checkout-issue</li>
-            <li><strong>Env:</strong> sbx-prod-like-17</li>
-            <li><strong>Scenario:</strong> subscribe + pay</li>
-          </ul>
-        </div>
-      </section>
-
-      <section class="section">
-        <h4>关键指标</h4>
-        <div class="body">
-          <ul class="tree">
-            <li><strong>TTFP:</strong> <span id="kpiTtfp">31s</span></li>
-            <li><strong>Error rate:</strong> <span id="kpiErr">0.6%</span></li>
-            <li><strong>P95 API:</strong> <span id="kpiApi">382ms</span></li>
-            <li><strong>TTR:</strong> <span id="kpiTtr">8m</span></li>
-          </ul>
-        </div>
-      </section>
+  <div class="frame">
+    <aside class="dock">
+      <div class="logo">V</div>
+      <button class="dock-btn active">预览</button>
+      <button class="dock-btn">回放</button>
+      <button class="dock-btn">观测</button>
+      <button class="dock-btn">补丁</button>
+      <button class="dock-btn">设置</button>
     </aside>
 
-    <main class="panel workspace">
-      <nav class="tabs">
-        <div class="tab active" data-tab="preview">App Preview</div>
-        <div class="tab" data-tab="timeline">Timeline</div>
-        <div class="tab" data-tab="insights">Insights</div>
-      </nav>
+    <div class="app">
+      <header class="header">
+        <div class="title">
+          <strong>Vibe Preview Studio · Prototype v3</strong>
+          <small>参考 Replit 风格重构：更强调工作台与运行态</small>
+        </div>
+        <div class="header-actions">
+          <span class="chip">project: smart-checkout</span>
+          <span class="chip live" id="runtime">● preview live</span>
+          <button class="btn" id="switchDevice">切换设备</button>
+          <button class="btn" id="injectBug">注入故障</button>
+          <button class="btn primary" id="runAI">AI 自动调试</button>
+        </div>
+      </header>
 
-      <section class="tab-content active" id="preview">
-        <div class="preview">
-          <div class="urlbar">
-            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-            <span id="urlLabel">https://sbx-17.vibe.app/checkout</span>
+      <section class="workspace">
+        <aside class="panel left">
+          <div class="panel-h">workspace</div>
+          <div class="panel-b">
+            <div class="menu">
+              <button class="active">App Preview</button>
+              <button>Session Timeline</button>
+              <button>AI Trace</button>
+              <button>Patch Queue</button>
+            </div>
+            <div class="item">
+              <strong>Context</strong>
+              <div class="small">Env: sbx-prod-like-17</div>
+              <div class="small">Branch: preview/checkout-bugfix</div>
+              <div class="small">Scenario: subscribe → pay</div>
+            </div>
+            <div class="item">
+              <strong>Review Goal</strong>
+              <div class="small">展示“问题复现→AI定位→影子验证→补丁应用”的完整闭环。</div>
+            </div>
           </div>
-          <div class="app-frame" id="appFrame">
-            <div class="card">
-              <div class="head">
-                <div>
-                  <strong>订阅与支付</strong>
-                  <div style="font-size:12px;color:var(--muted)">Production-like Preview</div>
+        </aside>
+
+        <main class="center">
+          <div class="tabbar">
+            <button class="tab active" data-tab="preview">Preview</button>
+            <button class="tab" data-tab="timeline">Timeline</button>
+            <button class="tab" data-tab="insight">Insight</button>
+          </div>
+
+          <div class="viewport">
+            <div class="url">https://sbx-17.vibe.app/checkout</div>
+            <div class="view-area" id="tab-preview">
+              <div class="phone">
+                <div class="phone-h">
+                  <div>
+                    <strong>Checkout</strong>
+                    <div class="small">Production-like Runtime</div>
+                  </div>
+                  <div class="metric" id="deviceTag">Desktop</div>
                 </div>
-                <div class="metric" id="deviceTag">Desktop</div>
-              </div>
-              <div class="body">
-                <input id="email" placeholder="请输入邮箱" />
-                <select id="plan">
-                  <option>Pro Monthly - ¥39</option>
-                  <option>Pro Yearly - ¥390</option>
-                </select>
-                <div class="pay">
-                  <button class="btn primary" id="payBtn">立即支付（测试）</button>
-                  <span class="state" id="paymentState">状态：等待支付动作</span>
+                <div class="phone-b">
+                  <input id="email" placeholder="输入邮箱" />
+                  <select id="plan">
+                    <option>Pro Monthly - ¥39</option>
+                    <option>Pro Yearly - ¥390</option>
+                  </select>
+                  <button class="btn primary" id="pay">立即支付（测试）</button>
+                  <div class="status" id="payState">状态：等待支付</div>
                 </div>
               </div>
             </div>
+
+            <div class="view-area" id="tab-timeline" style="display:none; align-items:start;">
+              <div style="width:min(780px, 100%); display:grid; gap:8px;">
+                <div class="card">10:21:03 打开 `/checkout`</div>
+                <div class="card">10:21:06 GET `/api/profile` 200</div>
+                <div class="card">10:21:08 POST `/api/checkout/create-intent` 200</div>
+                <div class="card" id="timelineStatus">10:21:10 等待用户点击支付按钮</div>
+              </div>
+            </div>
+
+            <div class="view-area" id="tab-insight" style="display:none; align-items:start;">
+              <div style="width:min(780px, 100%); display:grid; gap:8px;">
+                <div class="card ok">Preview Fidelity Score: <strong>94 / 100</strong></div>
+                <div class="card warn">环境差异：`PAYMENT_TIMEOUT_MS` 在 preview 与 prod 不一致</div>
+                <div class="card">建议：将支付链路纳入 mobile + desktop 自动回归</div>
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
 
-      <section class="tab-content" id="timeline">
-        <div style="padding:14px; display:grid; gap:10px;">
-          <div class="item">10:21:03 用户进入 /checkout</div>
-          <div class="item">10:21:06 GET /api/profile -> 200</div>
-          <div class="item">10:21:08 POST /api/checkout/create-intent -> 200 (301ms)</div>
-          <div class="item" id="timelineState">10:21:12 等待支付按钮点击...</div>
-        </div>
-      </section>
-
-      <section class="tab-content" id="insights">
-        <div style="padding:14px; display:grid; gap:10px;">
-          <div class="item ok">Preview Fidelity: 93 / 100</div>
-          <div class="item warn">配置差异：`PAYMENT_TIMEOUT_MS` 预览环境与生产不一致</div>
-          <div class="item">建议：将支付链路加入场景回归（desktop + mobile）</div>
-        </div>
-      </section>
-    </main>
-
-    <aside class="panel assistant">
-      <section class="panel" style="background: transparent; border: none;">
-        <div class="assistant-head">
-          <span>AI Debug Copilot</span>
-          <span id="agentStatus" class="chip">idle</span>
-        </div>
-        <div class="assistant-body">
-          <div class="hint" id="agentHint">点击「AI 自动调试」后，系统将基于日志 + 网络 + 交互轨迹给出根因与补丁建议。</div>
-          <div class="item" id="root1">暂无根因候选。</div>
-          <div class="item" id="root2">暂无验证计划。</div>
-          <div class="actions">
-            <button class="btn" id="validatePatch">影子验证</button>
-            <button class="btn primary" id="applyPatch">应用补丁</button>
-            <button class="btn" id="rollbackPatch">回滚</button>
+          <div class="kpi-row">
+            <div class="kpi">TTFP<strong id="ttfp">29s</strong></div>
+            <div class="kpi">Error Rate<strong id="errRate">0.7%</strong></div>
+            <div class="kpi">P95 API<strong id="p95">360ms</strong></div>
+            <div class="kpi">TTR<strong id="ttr">7m</strong></div>
           </div>
-          <div class="item" id="patchResult">补丁状态：未执行</div>
-        </div>
+        </main>
+
+        <aside class="right">
+          <section class="panel">
+            <div class="panel-h">AI Debug Copilot <span id="aiState" class="small">idle</span></div>
+            <div class="panel-b">
+              <div class="card" id="aiHint">点击「AI 自动调试」，系统将自动读取 logs/network/timeline 生成根因候选。</div>
+              <div class="card" id="rootCause">暂无根因候选</div>
+              <div class="card" id="verifyPlan">暂无验证计划</div>
+
+              <div class="actions">
+                <button class="btn" id="validate">影子验证</button>
+                <button class="btn primary" id="apply">应用补丁</button>
+                <button class="btn" id="rollback">回滚</button>
+              </div>
+
+              <div class="card" id="patchState">补丁状态：未执行</div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-h">recent runs <span id="runCnt" class="small">0</span></div>
+            <div class="panel-b" id="runs"></div>
+          </section>
+        </aside>
       </section>
-
-      <section class="panel" style="background: transparent; border: none;">
-        <div class="assistant-head">
-          <span>Recent Agent Runs</span>
-          <span class="chip" id="agentRunCount">0</span>
-        </div>
-        <div class="assistant-body" id="runList" style="overflow:auto"></div>
-      </section>
-    </aside>
-
-    <section class="panel log-box">
-      <div class="row-head">
-        <span>Runtime Logs</span>
-        <span id="logCount">3 logs</span>
-      </div>
-      <div class="table">
-        <table>
-          <thead><tr><th>Time</th><th>Level</th><th>Message</th></tr></thead>
-          <tbody id="logs"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <section class="panel network-box">
-      <div class="row-head">
-        <span>Network</span>
-        <span id="reqCount">2 requests</span>
-      </div>
-      <div class="table">
-        <table>
-          <thead><tr><th>Method</th><th>Path</th><th>Status</th><th>Latency</th></tr></thead>
-          <tbody id="requests"></tbody>
-        </table>
-      </div>
-    </section>
+    </div>
   </div>
 
   <script>
-    const tabs = document.querySelectorAll('.tab');
-    const contents = document.querySelectorAll('.tab-content');
-
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        tabs.forEach(t => t.classList.remove('active'));
-        contents.forEach(c => c.classList.remove('active'));
-        tab.classList.add('active');
-        document.getElementById(tab.dataset.tab).classList.add('active');
-      });
-    });
-
-    const logsEl = document.getElementById('logs');
-    const reqEl = document.getElementById('requests');
-    const logCountEl = document.getElementById('logCount');
-    const reqCountEl = document.getElementById('reqCount');
-
-    const paymentState = document.getElementById('paymentState');
-    const agentStatus = document.getElementById('agentStatus');
-    const agentHint = document.getElementById('agentHint');
-    const root1 = document.getElementById('root1');
-    const root2 = document.getElementById('root2');
-    const patchResult = document.getElementById('patchResult');
-    const timelineState = document.getElementById('timelineState');
-
-    const kpiErr = document.getElementById('kpiErr');
-    const kpiTtr = document.getElementById('kpiTtr');
-
-    const runtimeStatus = document.getElementById('runtimeStatus');
-    const deviceTag = document.getElementById('deviceTag');
-    const appFrame = document.getElementById('appFrame');
-
-    const runList = document.getElementById('runList');
-    const agentRunCount = document.getElementById('agentRunCount');
-
-    let isFaultInjected = false;
-    let patchValidated = false;
-    let mobile = false;
-    const runs = [];
-
     const logs = [
-      { time: '10:21:08', level: 'info', msg: 'payment intent created' },
-      { time: '10:21:09', level: 'info', msg: 'checkout rendered' },
-      { time: '10:21:12', level: 'info', msg: 'waiting user action' }
+      { t: '10:21:07', lvl: 'info', msg: 'checkout initialized' },
+      { t: '10:21:08', lvl: 'info', msg: 'payment intent created' },
+      { t: '10:21:10', lvl: 'info', msg: 'waiting payment action' }
     ];
 
-    const requests = [
-      { m: 'GET', p: '/api/profile', s: 200, l: '102ms' },
-      { m: 'POST', p: '/api/checkout/create-intent', s: 200, l: '301ms' }
+    const reqs = [
+      { m: 'GET', p: '/api/profile', s: 200, l: '103ms' },
+      { m: 'POST', p: '/api/checkout/create-intent', s: 200, l: '287ms' }
     ];
 
-    function levelClass(level) {
-      if (level === 'error') return 'text-err';
-      if (level === 'warn') return 'text-warn';
-      return 'text-ok';
-    }
+    const runData = [];
 
-    function renderLogs() {
-      logsEl.innerHTML = '';
-      [...logs].reverse().forEach(l => {
-        const row = document.createElement('tr');
-        row.innerHTML = `<td>${l.time}</td><td class="${levelClass(l.level)}">${l.level}</td><td>${l.msg}</td>`;
-        logsEl.appendChild(row);
-      });
-      logCountEl.textContent = `${logs.length} logs`;
-    }
+    let hasBug = false;
+    let validated = false;
+    let mobile = false;
 
-    function renderRequests() {
-      reqEl.innerHTML = '';
-      [...requests].reverse().forEach(r => {
-        const statusClass = r.s >= 400 ? 'text-err' : 'text-ok';
-        const row = document.createElement('tr');
-        row.innerHTML = `<td>${r.m}</td><td>${r.p}</td><td class="${statusClass}">${r.s}</td><td>${r.l}</td>`;
-        reqEl.appendChild(row);
-      });
-      reqCountEl.textContent = `${requests.length} requests`;
-    }
+    const payState = document.getElementById('payState');
+    const timelineStatus = document.getElementById('timelineStatus');
+    const runtime = document.getElementById('runtime');
 
-    function renderRuns() {
-      runList.innerHTML = '';
-      [...runs].reverse().forEach(r => {
-        const item = document.createElement('div');
-        item.className = 'item';
-        item.innerHTML = `<strong>${r.title}</strong><br><span style="color:var(--muted)">${r.time} · ${r.result}</span>`;
-        runList.appendChild(item);
-      });
-      agentRunCount.textContent = `${runs.length}`;
-      if (!runs.length) {
-        const empty = document.createElement('div');
-        empty.className = 'item';
-        empty.textContent = '暂无调试运行记录。';
-        runList.appendChild(empty);
-      }
-    }
+    const aiState = document.getElementById('aiState');
+    const aiHint = document.getElementById('aiHint');
+    const rootCause = document.getElementById('rootCause');
+    const verifyPlan = document.getElementById('verifyPlan');
+    const patchState = document.getElementById('patchState');
+
+    const errRate = document.getElementById('errRate');
+    const ttr = document.getElementById('ttr');
+    const deviceTag = document.getElementById('deviceTag');
+
+    const runCnt = document.getElementById('runCnt');
+    const runs = document.getElementById('runs');
 
     function now() {
       return new Date().toLocaleTimeString('zh-CN', { hour12: false });
     }
 
-    document.getElementById('injectIssue').addEventListener('click', () => {
-      isFaultInjected = true;
-      patchValidated = false;
-      logs.push({ time: now(), level: 'warn', msg: 'checkout button handler missing (injected)' });
-      runtimeStatus.textContent = '● Preview Degraded';
-      runtimeStatus.classList.remove('live');
-      paymentState.textContent = '状态：已注入故障，点击支付可复现';
-      timelineState.textContent = `${now()} 故障注入：onPay handler 被移除`; 
-      kpiErr.textContent = '5.1%';
-      renderLogs();
-    });
-
-    document.getElementById('payBtn').addEventListener('click', () => {
-      if (isFaultInjected) {
-        logs.push({ time: now(), level: 'error', msg: 'TypeError: onPay is not a function' });
-        requests.push({ m: 'POST', p: '/api/pay', s: 500, l: '67ms' });
-        paymentState.textContent = '状态：支付失败（事件未绑定）';
-        timelineState.textContent = `${now()} 点击支付后抛出 TypeError`; 
-      } else {
-        logs.push({ time: now(), level: 'info', msg: 'payment success in test mode' });
-        requests.push({ m: 'POST', p: '/api/pay', s: 200, l: '198ms' });
-        paymentState.textContent = '状态：支付成功';
-        timelineState.textContent = `${now()} 支付流程完成（200）`; 
+    function renderRuns() {
+      runs.innerHTML = '';
+      [...runData].reverse().forEach(r => {
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.innerHTML = `<strong>${r.title}</strong><div class="small">${r.time} · ${r.desc}</div>`;
+        runs.appendChild(div);
+      });
+      if (!runData.length) {
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.textContent = '暂无运行记录';
+        runs.appendChild(div);
       }
-      renderLogs();
-      renderRequests();
+      runCnt.textContent = runData.length;
+    }
+
+    function addRun(desc) {
+      runData.push({ title: `Run #${runData.length + 1}`, time: now(), desc });
+      renderRuns();
+    }
+
+    document.querySelectorAll('.tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(n => n.classList.remove('active'));
+        btn.classList.add('active');
+
+        document.getElementById('tab-preview').style.display = 'none';
+        document.getElementById('tab-timeline').style.display = 'none';
+        document.getElementById('tab-insight').style.display = 'none';
+
+        const key = btn.dataset.tab;
+        document.getElementById(`tab-${key}`).style.display = 'grid';
+      });
     });
 
-    document.getElementById('runAgent').addEventListener('click', () => {
-      agentStatus.textContent = 'running';
-      agentHint.textContent = 'AI 正在聚合运行证据：logs + network + timeline + interaction。';
+    document.getElementById('injectBug').addEventListener('click', () => {
+      hasBug = true;
+      validated = false;
+      runtime.textContent = '● preview degraded';
+      runtime.classList.remove('live');
+      payState.textContent = '状态：故障已注入，请点击支付复现';
+      timelineStatus.textContent = `${now()} 注入故障：CheckoutButton 缺失 onPay handler`;
+      errRate.textContent = '4.8%';
+      addRun('fault injected');
+    });
+
+    document.getElementById('pay').addEventListener('click', () => {
+      if (hasBug) {
+        payState.textContent = '状态：支付失败（TypeError: onPay is not a function）';
+        timelineStatus.textContent = `${now()} 支付失败：onPay is not a function`;
+        reqs.push({ m: 'POST', p: '/api/pay', s: 500, l: '70ms' });
+      } else {
+        payState.textContent = '状态：支付成功（测试模式）';
+        timelineStatus.textContent = `${now()} 支付成功：POST /api/pay 200`;
+        reqs.push({ m: 'POST', p: '/api/pay', s: 200, l: '182ms' });
+      }
+      addRun('payment clicked');
+    });
+
+    document.getElementById('runAI').addEventListener('click', () => {
+      aiState.textContent = 'running';
+      aiHint.textContent = 'AI 正在聚合 runtime signals：logs + network + timeline + ui events。';
       setTimeout(() => {
-        root1.className = 'item error';
-        root1.innerHTML = '<strong>Root Cause #1 (0.87)</strong><br>CheckoutButton 缺少 onPay props 传递，点击事件为空。';
-        root2.className = 'item warn';
-        root2.innerHTML = '<strong>Verification Plan</strong><br>在 shadow 环境执行 checkout.e2e (desktop/mobile) + payment smoke。';
-        patchResult.textContent = '补丁建议已生成：增加默认 handler + null guard。';
-        agentStatus.textContent = 'done';
-        kpiTtr.textContent = '6m';
-        runs.push({ title: 'Run #' + (runs.length + 1), time: now(), result: 'Root cause generated' });
-        renderRuns();
+        rootCause.className = 'card error';
+        rootCause.innerHTML = '<strong>Root Cause #1 (0.89)</strong><div class="small">CheckoutButton 事件回调未注入，导致 onPay 空引用。</div>';
+
+        verifyPlan.className = 'card warn';
+        verifyPlan.innerHTML = '<strong>Verification Plan</strong><div class="small">shadow 环境执行 checkout.e2e + payment smoke（desktop/mobile）。</div>';
+
+        patchState.className = 'card ok';
+        patchState.textContent = '补丁建议：增加默认 handler + null guard + feature flag fallback';
+        aiState.textContent = 'done';
+        ttr.textContent = '5m';
+        addRun('ai root cause generated');
       }, 700);
     });
 
-    document.getElementById('validatePatch').addEventListener('click', () => {
-      if (!root1.textContent.includes('Root Cause')) {
-        patchResult.textContent = '请先运行 AI 自动调试再验证补丁。';
+    document.getElementById('validate').addEventListener('click', () => {
+      if (!rootCause.textContent.includes('Root Cause')) {
+        patchState.className = 'card warn';
+        patchState.textContent = '请先执行 AI 自动调试。';
         return;
       }
-      patchResult.textContent = '正在影子环境验证补丁...';
+      patchState.className = 'card';
+      patchState.textContent = '影子环境验证中...';
       setTimeout(() => {
-        patchValidated = true;
-        patchResult.textContent = '验证通过：8/8 场景成功，支付链路恢复。';
-        runs.push({ title: 'Run #' + (runs.length + 1), time: now(), result: 'Patch validated' });
-        renderRuns();
+        validated = true;
+        patchState.className = 'card ok';
+        patchState.textContent = '验证通过：8/8 场景通过';
+        addRun('patch validated in shadow');
       }, 800);
     });
 
-    document.getElementById('applyPatch').addEventListener('click', () => {
-      if (!patchValidated) {
-        patchResult.textContent = '未通过影子验证，禁止应用补丁。';
+    document.getElementById('apply').addEventListener('click', () => {
+      if (!validated) {
+        patchState.className = 'card error';
+        patchState.textContent = '未通过 shadow 验证，禁止应用补丁。';
         return;
       }
-      isFaultInjected = false;
-      runtimeStatus.textContent = '● Preview Live';
-      runtimeStatus.classList.add('live');
-      paymentState.textContent = '状态：补丁已应用，请重新支付验证';
-      logs.push({ time: now(), level: 'info', msg: 'patch applied to preview env' });
-      kpiErr.textContent = '0.8%';
-      patchResult.textContent = '补丁应用成功。';
-      runs.push({ title: 'Run #' + (runs.length + 1), time: now(), result: 'Patch applied' });
-      renderLogs();
-      renderRuns();
+      hasBug = false;
+      runtime.textContent = '● preview live';
+      runtime.classList.add('live');
+      payState.textContent = '状态：补丁已应用，请重新支付验证';
+      errRate.textContent = '0.9%';
+      patchState.className = 'card ok';
+      patchState.textContent = '补丁已应用到 preview-sbx-17';
+      addRun('patch applied');
     });
 
-    document.getElementById('rollbackPatch').addEventListener('click', () => {
-      isFaultInjected = true;
-      runtimeStatus.textContent = '● Preview Degraded';
-      runtimeStatus.classList.remove('live');
-      paymentState.textContent = '状态：已回滚到故障快照';
-      logs.push({ time: now(), level: 'warn', msg: 'rollback to previous snapshot' });
-      patchResult.textContent = '回滚完成。';
-      runs.push({ title: 'Run #' + (runs.length + 1), time: now(), result: 'Rollback completed' });
-      renderLogs();
-      renderRuns();
+    document.getElementById('rollback').addEventListener('click', () => {
+      hasBug = true;
+      runtime.textContent = '● preview degraded';
+      runtime.classList.remove('live');
+      payState.textContent = '状态：已回滚到故障快照';
+      patchState.className = 'card warn';
+      patchState.textContent = '回滚完成';
+      addRun('rollback completed');
     });
 
     document.getElementById('switchDevice').addEventListener('click', () => {
       mobile = !mobile;
       if (mobile) {
-        appFrame.style.padding = '16px 24%';
+        document.querySelector('.phone').style.maxWidth = '340px';
         deviceTag.textContent = 'Mobile';
       } else {
-        appFrame.style.padding = '22px';
+        document.querySelector('.phone').style.maxWidth = '420px';
         deviceTag.textContent = 'Desktop';
       }
     });
 
-    renderLogs();
-    renderRequests();
     renderRuns();
   </script>
 </body>
