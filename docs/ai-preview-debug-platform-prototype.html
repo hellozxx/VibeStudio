@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 应用预览与调试平台 - 可交互原型</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #141b34;
+      --panel-2: #1b2447;
+      --text: #e6ebff;
+      --muted: #98a3d1;
+      --ok: #21c55d;
+      --warn: #f59e0b;
+      --err: #ef4444;
+      --accent: #60a5fa;
+      --accent-2: #8b5cf6;
+      --border: #2b376f;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Noto Sans CJK SC", sans-serif;
+      background: radial-gradient(circle at top right, #1b2350 0%, var(--bg) 45%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      min-height: 100vh;
+      gap: 12px;
+      padding: 12px;
+    }
+
+    .sidebar, .main { background: rgba(20, 27, 52, 0.85); border: 1px solid var(--border); border-radius: 14px; }
+    .sidebar { padding: 14px; }
+    .main {
+      display: grid;
+      grid-template-rows: 72px 1fr;
+      overflow: hidden;
+    }
+
+    .brand { font-weight: 700; font-size: 15px; margin-bottom: 12px; }
+    .muted { color: var(--muted); font-size: 12px; }
+
+    .nav-group { margin-top: 16px; }
+    .nav-title { font-size: 11px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+
+    .nav-btn {
+      width: 100%;
+      text-align: left;
+      border: 1px solid var(--border);
+      background: #121a3a;
+      color: var(--text);
+      padding: 10px 11px;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+
+    .nav-btn.active { border-color: var(--accent); box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.35); }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(35, 48, 95, 0.6), rgba(20, 27, 52, 0));
+    }
+
+    .top-left { display: flex; gap: 8px; align-items: center; }
+    .badge { padding: 5px 8px; border-radius: 999px; font-size: 12px; border: 1px solid var(--border); color: var(--muted); }
+    .status-ok { color: #bbf7d0; border-color: #166534; background: rgba(34, 197, 94, 0.12); }
+    .status-warn { color: #fde68a; border-color: #92400e; background: rgba(245, 158, 11, 0.12); }
+
+    .btn {
+      border: 1px solid var(--border);
+      background: #1a2450;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 9px 12px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      border: none;
+      font-weight: 600;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 12px;
+      padding: 12px;
+      overflow: auto;
+    }
+
+    .card {
+      background: rgba(14, 20, 42, 0.7);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding: 10px 12px;
+      background: rgba(27, 36, 71, 0.55);
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .preview-shell {
+      height: 280px;
+      background: #0f172a;
+      border-radius: 8px;
+      margin: 12px;
+      border: 1px solid #263267;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .preview-bar { height: 28px; border-bottom: 1px solid #263267; display: flex; align-items: center; padding: 0 10px; font-size: 12px; color: #c7d2fe; }
+    .preview-page { flex: 1; padding: 14px; display: grid; gap: 10px; }
+    .mock-input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #33407b;
+      background: #0b1330;
+      color: #e2e8f0;
+    }
+
+    .mock-btn {
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #33407b;
+      background: #172554;
+      color: #dbeafe;
+      cursor: pointer;
+      width: fit-content;
+    }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 12px; }
+
+    .panel-body { padding: 12px; font-size: 13px; }
+
+    .event-list, .log-list, .hyp-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 8px;
+      max-height: 210px;
+      overflow: auto;
+    }
+
+    .event-item, .log-item, .hyp-item {
+      border: 1px solid #2f3c74;
+      background: #11193b;
+      border-radius: 8px;
+      padding: 8px;
+      line-height: 1.45;
+    }
+
+    .sev-error { border-left: 4px solid var(--err); }
+    .sev-warn  { border-left: 4px solid var(--warn); }
+    .sev-info  { border-left: 4px solid var(--accent); }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      padding: 12px;
+    }
+
+    .kpi {
+      border: 1px solid #2f3c74;
+      border-radius: 10px;
+      padding: 10px;
+      background: #11193b;
+    }
+
+    .kpi .v { font-size: 18px; font-weight: 700; margin-top: 6px; }
+
+    .footer {
+      padding: 10px 12px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    @media (max-width: 1200px) {
+      .workspace { grid-template-columns: 1fr; }
+      .kpis { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 860px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { order: 2; }
+      .main { order: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">⚡ Vibe Preview Studio</div>
+      <div class="muted">运行态预览 & AI 调试工作台</div>
+
+      <div class="nav-group">
+        <div class="nav-title">工作区</div>
+        <button class="nav-btn active">预览环境</button>
+        <button class="nav-btn">会话回放</button>
+        <button class="nav-btn">AI 调试</button>
+        <button class="nav-btn">补丁验证</button>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-title">当前项目</div>
+        <div class="event-item">
+          <div><strong>项目</strong>：smart-checkout</div>
+          <div><strong>分支</strong>：preview/feature-pay</div>
+          <div><strong>环境</strong>：preview-sbx-17</div>
+        </div>
+      </div>
+    </aside>
+
+    <section class="main">
+      <header class="topbar">
+        <div class="top-left">
+          <span class="badge">Preview URL: sbx-17.vibe.local</span>
+          <span class="badge status-ok" id="envStatus">运行中</span>
+          <span class="badge" id="deviceBadge">Desktop</span>
+        </div>
+        <div>
+          <button class="btn" id="toggleDevice">切换设备</button>
+          <button class="btn" id="injectError">注入错误</button>
+          <button class="btn btn-primary" id="runDebug">AI 自动定位</button>
+        </div>
+      </header>
+
+      <div class="workspace">
+        <div class="left">
+          <article class="card">
+            <div class="card-header">
+              <span>应用预览</span>
+              <span id="previewMode">实时预览 · Desktop</span>
+            </div>
+            <div class="preview-shell" id="previewShell">
+              <div class="preview-bar">https://sbx-17.vibe.local/checkout</div>
+              <div class="preview-page">
+                <input class="mock-input" placeholder="输入邮箱进行订阅" id="emailInput" />
+                <button class="mock-btn" id="payBtn">立即支付（测试）</button>
+                <div class="event-item" id="previewState">状态：等待操作</div>
+              </div>
+            </div>
+          </article>
+
+          <div class="kpis">
+            <div class="kpi"><div class="muted">TTFP</div><div class="v" id="kpiTtfp">38s</div></div>
+            <div class="kpi"><div class="muted">错误率</div><div class="v" id="kpiErr">0.8%</div></div>
+            <div class="kpi"><div class="muted">P95 接口</div><div class="v" id="kpiApi">420ms</div></div>
+            <div class="kpi"><div class="muted">调试闭环</div><div class="v" id="kpiFix">9m</div></div>
+          </div>
+
+          <div class="grid-2">
+            <article class="card">
+              <div class="card-header"><span>会话时间线</span><span id="eventCount">3 events</span></div>
+              <div class="panel-body">
+                <ul class="event-list" id="eventList"></ul>
+              </div>
+            </article>
+
+            <article class="card">
+              <div class="card-header"><span>运行日志</span><span id="logCount">3 logs</span></div>
+              <div class="panel-body">
+                <ul class="log-list" id="logList"></ul>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <div class="right">
+          <article class="card">
+            <div class="card-header"><span>AI 调试面板</span><span id="agentState">待机</span></div>
+            <div class="panel-body">
+              <div class="event-item sev-info" id="agentSummary">点击“AI 自动定位”后将根据日志/网络/交互轨迹生成根因候选与修复建议。</div>
+              <h4>根因候选</h4>
+              <ul class="hyp-list" id="hypList">
+                <li class="hyp-item">暂无分析结果</li>
+              </ul>
+              <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+                <button class="btn" id="validatePatch">影子验证补丁</button>
+                <button class="btn btn-primary" id="applyPatch">应用补丁</button>
+                <button class="btn" id="rollbackPatch">回滚</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="card" style="margin-top:12px;">
+            <div class="card-header"><span>补丁结果</span><span id="patchState">未执行</span></div>
+            <div class="panel-body">
+              <div id="patchResult" class="event-item">暂无补丁验证结果。</div>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <div class="footer">
+        <span>原型用途：产品演示 / 交互流程对齐 / 技术评审输入</span>
+        <span>状态更新：<span id="lastUpdate">-</span></span>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const eventList = document.getElementById('eventList');
+    const logList = document.getElementById('logList');
+    const hypList = document.getElementById('hypList');
+
+    const eventCount = document.getElementById('eventCount');
+    const logCount = document.getElementById('logCount');
+    const agentState = document.getElementById('agentState');
+    const agentSummary = document.getElementById('agentSummary');
+    const patchState = document.getElementById('patchState');
+    const patchResult = document.getElementById('patchResult');
+    const previewState = document.getElementById('previewState');
+    const lastUpdate = document.getElementById('lastUpdate');
+    const deviceBadge = document.getElementById('deviceBadge');
+    const previewMode = document.getElementById('previewMode');
+    const previewShell = document.getElementById('previewShell');
+
+    const kpiErr = document.getElementById('kpiErr');
+    const kpiFix = document.getElementById('kpiFix');
+
+    let hasError = false;
+    let patchReady = false;
+    let mobile = false;
+
+    const events = [
+      { t: '10:21:03', type: 'ui_click', text: '用户打开 checkout 页面', sev: 'info' },
+      { t: '10:21:08', type: 'network_request', text: 'POST /api/checkout/create-intent', sev: 'info' },
+      { t: '10:21:08', type: 'network_response', text: '200 OK (318ms)', sev: 'info' }
+    ];
+
+    const logs = [
+      { t: '10:21:08', text: 'info  payment intent created', sev: 'info' },
+      { t: '10:21:08', text: 'info  render checkout button', sev: 'info' },
+      { t: '10:21:11', text: 'info  waiting user action', sev: 'info' }
+    ];
+
+    function sevClass(sev) {
+      if (sev === 'error') return 'sev-error';
+      if (sev === 'warn') return 'sev-warn';
+      return 'sev-info';
+    }
+
+    function drawEvents() {
+      eventList.innerHTML = '';
+      events.slice().reverse().forEach((e) => {
+        const li = document.createElement('li');
+        li.className = `event-item ${sevClass(e.sev)}`;
+        li.innerHTML = `<strong>${e.t}</strong> · ${e.type}<br>${e.text}`;
+        eventList.appendChild(li);
+      });
+      eventCount.textContent = `${events.length} events`;
+    }
+
+    function drawLogs() {
+      logList.innerHTML = '';
+      logs.slice().reverse().forEach((l) => {
+        const li = document.createElement('li');
+        li.className = `log-item ${sevClass(l.sev)}`;
+        li.innerHTML = `<strong>${l.t}</strong> · ${l.text}`;
+        logList.appendChild(li);
+      });
+      logCount.textContent = `${logs.length} logs`;
+    }
+
+    function now() {
+      return new Date().toLocaleTimeString('zh-CN', { hour12: false });
+    }
+
+    function updateStamp() {
+      lastUpdate.textContent = `${new Date().toLocaleString('zh-CN', { hour12: false })}`;
+    }
+
+    document.getElementById('payBtn').addEventListener('click', () => {
+      const email = document.getElementById('emailInput').value.trim();
+      events.push({ t: now(), type: 'ui_click', text: `点击支付按钮 ${email ? `(email: ${email})` : ''}`, sev: 'info' });
+
+      if (hasError) {
+        logs.push({ t: now(), text: 'error TypeError: onPay is not a function', sev: 'error' });
+        events.push({ t: now(), type: 'console_error', text: '支付按钮回调未绑定', sev: 'error' });
+        previewState.textContent = '状态：支付失败（按钮事件异常）';
+        previewState.className = 'event-item sev-error';
+        kpiErr.textContent = '4.9%';
+      } else {
+        logs.push({ t: now(), text: 'info payment success in test mode', sev: 'info' });
+        events.push({ t: now(), type: 'network_response', text: 'POST /api/pay 200 OK', sev: 'info' });
+        previewState.textContent = '状态：支付成功（测试模式）';
+        previewState.className = 'event-item sev-info';
+      }
+
+      drawEvents();
+      drawLogs();
+      updateStamp();
+    });
+
+    document.getElementById('injectError').addEventListener('click', () => {
+      hasError = true;
+      logs.push({ t: now(), text: 'warn checkout-button loaded without handler', sev: 'warn' });
+      events.push({ t: now(), type: 'agent_step', text: '注入故障：移除 onPay 事件绑定', sev: 'warn' });
+      previewState.textContent = '状态：已注入故障，请点击支付复现';
+      previewState.className = 'event-item sev-warn';
+      drawEvents();
+      drawLogs();
+      updateStamp();
+    });
+
+    document.getElementById('runDebug').addEventListener('click', () => {
+      agentState.textContent = '分析中';
+      agentSummary.textContent = '正在聚合：会话事件、console 错误、网络轨迹、最近改动...';
+      agentSummary.className = 'event-item sev-info';
+
+      setTimeout(() => {
+        hypList.innerHTML = `
+          <li class="hyp-item sev-error"><strong>假设 #1（0.84）</strong><br>支付按钮 onClick 引用的 onPay 未注入到组件 props。</li>
+          <li class="hyp-item sev-warn"><strong>假设 #2（0.57）</strong><br>feature flag 导致 checkout handler 被错误关闭。</li>
+          <li class="hyp-item sev-info"><strong>建议修复</strong><br>补丁：为 CheckoutButton 增加默认 handler，并补充空值保护。</li>
+        `;
+        agentState.textContent = '分析完成';
+        patchReady = true;
+        agentSummary.textContent = '分析完成：已生成补丁建议与验证计划（playwright: checkout.spec.ts）。';
+        agentSummary.className = 'event-item sev-info';
+        kpiFix.textContent = '6m';
+        updateStamp();
+      }, 900);
+    });
+
+    document.getElementById('validatePatch').addEventListener('click', () => {
+      if (!patchReady) {
+        patchState.textContent = '失败';
+        patchResult.textContent = '请先运行 AI 自动定位，生成补丁候选。';
+        patchResult.className = 'event-item sev-warn';
+        return;
+      }
+      patchState.textContent = '验证中';
+      patchResult.textContent = '影子环境运行中：执行 checkout 回归测试...';
+      patchResult.className = 'event-item sev-info';
+
+      setTimeout(() => {
+        patchState.textContent = '已通过';
+        patchResult.textContent = '验证通过：6/6 场景通过，移动端与桌面端支付流程正常。';
+        patchResult.className = 'event-item sev-info';
+        updateStamp();
+      }, 1000);
+    });
+
+    document.getElementById('applyPatch').addEventListener('click', () => {
+      if (patchState.textContent !== '已通过') {
+        patchState.textContent = '阻止';
+        patchResult.textContent = '未通过影子验证，禁止应用补丁。';
+        patchResult.className = 'event-item sev-error';
+        return;
+      }
+      hasError = false;
+      logs.push({ t: now(), text: 'info patch applied to preview environment', sev: 'info' });
+      events.push({ t: now(), type: 'agent_step', text: '补丁已应用到 preview-sbx-17', sev: 'info' });
+      drawEvents();
+      drawLogs();
+      patchResult.textContent = '补丁已应用：已恢复支付按钮事件绑定。';
+      patchResult.className = 'event-item sev-info';
+      previewState.textContent = '状态：补丁生效，可重新测试支付';
+      previewState.className = 'event-item sev-info';
+      kpiErr.textContent = '0.9%';
+      updateStamp();
+    });
+
+    document.getElementById('rollbackPatch').addEventListener('click', () => {
+      hasError = true;
+      logs.push({ t: now(), text: 'warn patch rollback triggered by user', sev: 'warn' });
+      events.push({ t: now(), type: 'agent_step', text: '已回滚到最近快照', sev: 'warn' });
+      drawEvents();
+      drawLogs();
+      patchState.textContent = '已回滚';
+      patchResult.textContent = '已回滚：环境恢复到补丁前快照。';
+      patchResult.className = 'event-item sev-warn';
+      previewState.textContent = '状态：已回滚，可再次复现问题';
+      previewState.className = 'event-item sev-warn';
+      updateStamp();
+    });
+
+    document.getElementById('toggleDevice').addEventListener('click', () => {
+      mobile = !mobile;
+      if (mobile) {
+        previewShell.style.maxWidth = '390px';
+        previewShell.style.margin = '12px auto';
+        deviceBadge.textContent = 'Mobile';
+        previewMode.textContent = '实时预览 · Mobile';
+      } else {
+        previewShell.style.maxWidth = 'none';
+        previewShell.style.margin = '12px';
+        deviceBadge.textContent = 'Desktop';
+        previewMode.textContent = '实时预览 · Desktop';
+      }
+      updateStamp();
+    });
+
+    drawEvents();
+    drawLogs();
+    updateStamp();
+  </script>
+</body>
+</html>

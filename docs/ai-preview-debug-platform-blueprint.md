@@ -337,3 +337,10 @@ sequenceDiagram
 2. 同步定义统一事件模型，避免后期重构成本。
 3. Agent 能力先“建议不自动修复”，逐步引入自动化。
 
+---
+
+
+## 14. 可交互原型
+
+- 原型文件：`docs/ai-preview-debug-platform-prototype.html`
+- 打开方式：直接在浏览器中打开该 HTML 文件即可体验交互流程（设备切换、错误注入、AI 分析、补丁验证、应用与回滚）。
