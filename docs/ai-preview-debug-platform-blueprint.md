@@ -101,7 +101,7 @@ flowchart LR
 
 **建议技术栈**：
 - 多 Agent 编排（Planner / Investigator / Fixer / Verifier）
-- 向量检索（pgvector/Weaviate）
+- 向量检索（sqlite-vec/Weaviate）
 
 ## 3.7 `patch-validator`
 **职责**：在影子环境应用补丁并执行场景测试，给出通过/失败结论。
@@ -115,7 +115,9 @@ flowchart LR
 
 ## 4. 数据模型（首版）
 
-## 4.1 关系型数据库（PostgreSQL）
+## 4.1 关系型数据库（SQLite）
+
+> 选型说明：MVP 阶段优先 SQLite（WAL 模式 + 定期备份），以降低部署与运维复杂度；当并发与数据规模超阈值后再迁移到分布式数据库。
 
 ### `projects`
 - `id` (uuid)
